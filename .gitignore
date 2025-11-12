@@ -1,2 +1,5 @@
 /logs/*
 /.kaggle/*
+/test/*.csv
+/data/olympic/*.csv
+/data_sources/*
