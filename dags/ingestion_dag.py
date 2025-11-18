@@ -16,26 +16,27 @@ import requests, logging, random, csv
 from kaggle.api.kaggle_api_extended import KaggleApi
 import os
 
-# Define directories
-LANDING_DIR = "/opt/airflow/data/landing"
-LOCAL_EXCEL_PATH = "/opt/airflow/data_sources/natural_disasters_from_1900.xlsx"
+# Paths used 
+LANDING_DIR = "/opt/airflow/data/landing"       # landing directory where the raw data is put
+LOCAL_EXCEL_PATH = "/opt/airflow/data_sources/natural_disasters_from_1900.xlsx" # path to the excel file for the natural disasters
 
-def create_landing_folder():
-    os.makedirs(LANDING_DIR, exist_ok=True)
+# ----------------------- FUNCTIONS -----------------------------------------------------
 
-# Function to download dataset from Kaggle
+# Download olympic dataset from Kaggle, containing 6 csv files, to the landing directory
+# Read the README to find how to get the API Key
 def download_kaggle_dataset():
     api = KaggleApi()
     api.authenticate()
     dataset = "josephcheng123456/olympic-historical-dataset-from-olympediaorg"
     api.dataset_download_files(dataset, path=LANDING_DIR, unzip=True)
 
-# Function to copy the local Excel file
+# Copy the natural disasters excel files to the landing directory
 def copy_excel_to_landing():
     destination = os.path.join(LANDING_DIR, os.path.basename(LOCAL_EXCEL_PATH))
     shutil.copy(LOCAL_EXCEL_PATH, destination)
 
-# DAG definition
+# ----------------------- DAG -----------------------------------------------------
+
 with DAG(
     dag_id="ingestion_dag",
     start_date=datetime(2024, 1, 1),
@@ -43,9 +44,9 @@ with DAG(
     tags=["ingestion", "raw_data"],
 ) as dag:
     
-    create_landing_zone = PythonOperator(
+    create_landing_zone = BashOperator(
         task_id="create_landing_folder",
-        python_callable=create_landing_folder,
+        bash_command=f"mkdir -p {LANDING_DIR}"
     )
 
     download_kaggle = PythonOperator(
@@ -63,5 +64,4 @@ with DAG(
         bash_command=f"ls -lh {LANDING_DIR}"
     )
 
-    # Define dependencies
     create_landing_zone >> [download_kaggle, copy_excel] >> verify
