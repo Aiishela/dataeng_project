@@ -370,6 +370,21 @@ services:
     networks:
       - Practice
 
+  neo:
+    image: neo4j
+    user: "0:0"
+    ports:
+        - "${NEO_UI_PORT}:7474"
+        - "${NEO_BOLT_PORT}:7687"
+    restart: always
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH} # e.g. neo4j/test
+    volumes:
+      # - ./neo4j/data:/data
+      - ./data/staging:/var/lib/neo4j/import
+    networks:
+      - Practice
+
 networks:
   Practice:
     name: airflow_network
