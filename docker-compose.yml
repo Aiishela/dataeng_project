@@ -107,7 +107,7 @@ services:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
       retries: 5
-      start_period: 5s
+      start_period: 300s
     restart: always
     networks:
       - Practice
@@ -360,7 +360,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
   pgadmin:
-    container_name: pgadmin_airflow
+    container_name: pgadmin_airflow_1
     image: elestio/pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
