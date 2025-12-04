@@ -110,6 +110,104 @@ def clean_cou_task_fn(**context):
     logging.info("Writing cleaned countries to %s", dst)
     cou.to_csv(dst, index=False)
 
+# --------------- NATURAL DISASTERS ------------------------
+def clean_natural_disasters():
+    import pandas as pd
+
+    INPUT_FILE = Path(LANDING_DIR) / "natural_disasters_from_1900.xlsx"
+
+    df = pd.read_excel(INPUT_FILE)  
+    cols_to_drop = [
+        "Historic",
+        "Classification Key",
+        "External IDs",
+        "OFDA/BHA Response",
+        "Appeal",
+        "Declaration",
+        "AID Contribution ('000 US$)",
+        "Associated Types",
+        # "Magnitude",
+        # "Magnitude Scale",
+        "River Basin",
+
+        "Total Deaths",
+        "No. Injured",
+        "No. Affected",
+        "No. Homeless",
+        "Total Affected",
+        "Reconstruction Costs ('000 US$)",
+        "Reconstruction Costs, Adjusted ('000 US$)",
+        "Insured Damage ('000 US$)",
+        "Insured Damage, Adjusted ('000 US$)",
+        "Total Damage ('000 US$)",
+        "Total Damage, Adjusted ('000 US$)",
+
+        "CPI",
+        "Admin Units",
+        "Entry Date",
+        "Last Update"
+    ]
+
+    df = df.drop(columns=[c for c in cols_to_drop if c in df.columns], errors="ignore")
+
+    # df.to_excel("../data/test/01_remove_columns.xlsx", index=False)
+    # -------------------------------- Normalize date 
+
+    def safe_date(y, m, d):
+        """Constructs a safe datetime from Y/M/D even if missing."""
+        try:
+            if pd.isna(y):
+                return None
+            y = int(y)
+            m = int(m) if not pd.isna(m) else 1
+            d = int(d) if not pd.isna(d) else 1
+            return datetime(y, m, d)
+        except:
+            return None
+
+    df["Start Date"] = df.apply(
+        lambda r: safe_date(r["Start Year"], r["Start Month"], r["Start Day"]), axis=1
+    )
+
+    df["End Date"] = df.apply(
+        lambda r: safe_date(r["End Year"], r["End Month"], r["End Day"]), axis=1
+    )
+
+    # Remove events where the date is invalid
+    df = df[df["Start Date"].notna()]
+    df = df[df["End Date"].notna()]
+
+    # Keep reasonable years only
+    df = df[(df["Start Year"] >= 1987) & (df["Start Year"] <= datetime.now().year)]
+
+    # -------------------------------- Remove date columns 
+    cols_to_drop = [
+        "Start Year",
+        "Start Month",
+        "Start Day",
+        "End Year",
+        "End Month",
+        "End Day"
+    ]
+
+    df = df.drop(columns=[c for c in cols_to_drop if c in df.columns], errors="ignore")
+
+    # df.to_excel(STAGING_DIR + "/02_normalize_date.xlsx", index=False)
+    df.to_csv(Path(STAGING_DIR) / "02_normalize_date.csv", index=False)
+
+# ---------------------- NEO4J ----------------------
+
+def run_query():
+    from neo4j import GraphDatabase
+
+    uri = "bolt://neo:7687"   # service name from docker-compose
+    driver = GraphDatabase.driver(uri)
+
+    with driver.session() as session:
+        session.run("""
+            MATCH (n)
+            RETURN count(n) AS nodes;
+        """)
 
 # ---------------------- DAG ----------------------
 
@@ -145,6 +243,17 @@ with DAG(
         python_callable=clean_cou_task_fn,
         execution_timeout=timedelta(minutes=5),
     )
+
+    clean_disasters = PythonOperator(
+        task_id="clean_natural_disasters", 
+        python_callable=clean_natural_disasters)
+
+    run_cypher_disaster = PythonOperator(
+        task_id="neo4j_query",
+        python_callable=run_query
+    )
+
+    clean_disasters >> run_cypher_disaster >> create_staging
 
     # All cleaning tasks can run in parallel after staging folder exists
     create_staging >> [clean_bio, clean_res, clean_cou]
