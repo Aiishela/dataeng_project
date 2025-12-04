@@ -26,6 +26,8 @@ def _ensure_dirs():
 def clean_bio_task_fn(**context):
     import pandas as pd
     import unicodedata
+    import os
+    os.umask(0o022)
 
     src = LANDING_DIR / "Olympic_Athlete_Bio.csv"
     dst = STAGING_DIR / "Olympic_Athlete_Bio.csv"
@@ -54,6 +56,8 @@ def clean_bio_task_fn(**context):
 
 def clean_res_task_fn(**context):
     import pandas as pd
+    import os
+    os.umask(0o022)
 
     src = LANDING_DIR / "Olympic_Athlete_Event_Results.csv"
     dst = STAGING_DIR / "Olympic_Athlete_Event_Results.csv"
@@ -82,6 +86,8 @@ def clean_res_task_fn(**context):
 
 def clean_cou_task_fn(**context):
     import pandas as pd
+    import os
+    os.umask(0o022)
 
     src = LANDING_DIR / "Olympics_Country.csv"
     dst = STAGING_DIR / "Olympics_Country.csv"
@@ -113,6 +119,8 @@ def clean_cou_task_fn(**context):
 # --------------- NATURAL DISASTERS ------------------------
 def clean_natural_disasters():
     import pandas as pd
+    import os
+    os.umask(0o022)
 
     INPUT_FILE = Path(LANDING_DIR) / "natural_disasters_from_1900.xlsx"
 
@@ -195,19 +203,12 @@ def clean_natural_disasters():
     # df.to_excel(STAGING_DIR + "/02_normalize_date.xlsx", index=False)
     df.to_csv(Path(STAGING_DIR) / "02_normalize_date.csv", index=False)
 
-# ---------------------- NEO4J ----------------------
+# ---------------------- GIVE PERMISSION ----------------------
 
-def run_query():
-    from neo4j import GraphDatabase
-
-    uri = "bolt://neo:7687"   # service name from docker-compose
-    driver = GraphDatabase.driver(uri)
-
-    with driver.session() as session:
-        session.run("""
-            MATCH (n)
-            RETURN count(n) AS nodes;
-        """)
+fix_permissions = BashOperator(
+    task_id='fix_permissions',
+    bash_command='chmod 644 /opt/airflow/data/staging/*.csv'
+)
 
 # ---------------------- DAG ----------------------
 
@@ -248,12 +249,5 @@ with DAG(
         task_id="clean_natural_disasters", 
         python_callable=clean_natural_disasters)
 
-    run_cypher_disaster = PythonOperator(
-        task_id="neo4j_query",
-        python_callable=run_query
-    )
-
-    clean_disasters >> run_cypher_disaster >> create_staging
-
     # All cleaning tasks can run in parallel after staging folder exists
-    create_staging >> [clean_bio, clean_res, clean_cou]
+    create_staging >> [clean_disasters, clean_bio, clean_res, clean_cou] >> fix_permissions
