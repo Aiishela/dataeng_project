@@ -203,6 +203,49 @@ def clean_natural_disasters():
     # df.to_excel(STAGING_DIR + "/02_normalize_date.xlsx", index=False)
     df.to_csv(Path(STAGING_DIR) / "02_normalize_date.csv", index=False)
 
+# --------------- MEDAL TALLY ------------------------
+def clean_medal_tally():
+    """Clean Olympic Games Medal Tally data"""
+    import pandas as pd
+    import os
+    os.umask(0o022)
+
+    src = LANDING_DIR / "Olympic_Games_Medal_Tally.csv"
+    dst = STAGING_DIR / "Olympic_Games_Medal_Tally.csv"
+
+    if not src.exists():
+        logging.warning(f"Medal tally source not found: {src}, skipping...")
+        return
+
+    logging.info("Reading medal tally from %s", src)
+    medals = pd.read_csv(src)
+
+    logging.info("Cleaning medal tally: normalize IDs, NOCs, and medal counts")
+
+    # Convert numeric columns
+    medals['edition_id'] = pd.to_numeric(medals['edition_id'], errors='coerce')
+    medals['year'] = pd.to_numeric(medals['year'], errors='coerce')
+    medals['gold'] = pd.to_numeric(medals['gold'], errors='coerce').fillna(0).astype(int)
+    medals['silver'] = pd.to_numeric(medals['silver'], errors='coerce').fillna(0).astype(int)
+    medals['bronze'] = pd.to_numeric(medals['bronze'], errors='coerce').fillna(0).astype(int)
+    medals['total'] = pd.to_numeric(medals['total'], errors='coerce').fillna(0).astype(int)
+
+    # Clean text columns
+    if 'country_noc' in medals.columns:
+        medals['country_noc'] = medals['country_noc'].astype(str).str.strip().str.upper()
+
+    if 'country' in medals.columns:
+        medals['country'] = medals['country'].astype(str).str.strip()
+
+    # Remove duplicates
+    medals = medals.drop_duplicates(subset=['edition_id', 'country_noc'], keep='first')
+
+    # Remove rows with missing critical data
+    medals = medals.dropna(subset=['edition_id', 'country_noc'])
+
+    logging.info("Writing cleaned medal tally to %s", dst)
+    medals.to_csv(dst, index=False)
+
 # ---------------------- GIVE PERMISSION ----------------------
 
 fix_permissions = BashOperator(
@@ -246,8 +289,14 @@ with DAG(
     )
 
     clean_disasters = PythonOperator(
-        task_id="clean_natural_disasters", 
+        task_id="clean_natural_disasters",
         python_callable=clean_natural_disasters)
 
+    clean_medals = PythonOperator(
+        task_id="clean_medal_tally",
+        python_callable=clean_medal_tally,
+        execution_timeout=timedelta(minutes=5),
+    )
+
     # All cleaning tasks can run in parallel after staging folder exists
-    create_staging >> [clean_disasters, clean_bio, clean_res, clean_cou] >> fix_permissions
+    create_staging >> [clean_disasters, clean_bio, clean_res, clean_cou, clean_medals] >> fix_permissions
