@@ -262,7 +262,13 @@ The execution follows a clear pipeline: **Ingestion → Staging → Graph Creati
 
 ### 1. Build the Docker Images
 
-From the **root of the project repository**, start by building the Docker images to install all required dependencies:
+From the **root of the project repository**, copy the example file:
+   ```bash
+   cp .env.example .env
+   ```
+Update the values in .env with your own credentials.
+
+Then build the Docker images to install all required dependencies:
 
 ```bash
 docker-compose build
