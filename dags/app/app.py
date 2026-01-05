@@ -33,9 +33,55 @@ analysis = st.selectbox(
     [
         "Disasters before vs after hosting Olympics",
         "Medals won during natural disasters",
-        "Country performance vs total natural disasters"
+        "Country performance vs total natural disasters",
+        "Top most resilient countries to natural disasters",
+        "Performance before/after major earthquakes"
     ]
 )
+QUERY_RESILIENT_COUNTRIES = """
+        MATCH (a:Athlete)-[:COMES_FROM]->(c:Country)
+        OPTIONAL MATCH (d:NaturalDisaster)-[:AFFECTED]->(c)
+        MATCH (a)-[:PARTICIPATED_IN]->(p)
+        WITH c, COUNT(d) AS total_disasters,
+        AVG(
+        CASE p.medal
+            WHEN 'Gold' THEN 3
+            WHEN 'Silver' THEN 2
+            WHEN 'Bronze' THEN 1
+            ELSE 0
+        END
+        ) AS avg_score
+        WHERE total_disasters > 0
+        RETURN c.name AS country,
+            total_disasters,
+            avg_score,
+            avg_score / total_disasters AS resilience
+        ORDER BY resilience DESC
+    """
+
+QUERY_EVO_AFTER_EARTHQUAKES = """
+    MATCH (d:NaturalDisaster)-[:AFFECTED]->(c:Country)
+    WHERE d.magnitude >= 6
+    AND d.type = "Earthquake"
+    MATCH (a:Athlete)-[:PARTICIPATED_IN]->(p:Participation)-[:IN_EDITION]->(e)
+    MATCH (p)-[:REPRESENTED]->(c)
+    WITH c, d, e,
+        CASE p.medal
+        WHEN 'Gold' THEN 3
+        WHEN 'Silver' THEN 2
+        WHEN 'Bronze' THEN 1
+        ELSE 0
+        END AS score
+    WITH c, d,
+        AVG(CASE WHEN e.end_date < d.start_date THEN score END) AS avg_before,
+        AVG(CASE WHEN e.start_date > d.end_date THEN score END) AS avg_after
+    RETURN c.name AS country,
+        d.dis_no AS disaster_id,
+        d.subtype AS disaster_subtype,
+        avg_before,
+        avg_after
+"""
+
 QUERY_COUNTRY_PERFORMANCE_VS_DISASTERS = """
 MATCH (a:Athlete)-[:PARTICIPATED_IN]->(p:Participation)-[:REPRESENTED]->(c:Country)
 WITH c,
@@ -114,11 +160,15 @@ if st.button("Run analysis"):
         elif analysis == "Country performance vs total natural disasters":
             result = session.run(QUERY_COUNTRY_PERFORMANCE_VS_DISASTERS)
 
+        elif analysis == "Top most resilient countries to natural disasters":
+            result = session.run(QUERY_RESILIENT_COUNTRIES)
+
+        elif analysis == "Performance before/after major earthquakes":
+            result = session.run(QUERY_EVO_AFTER_EARTHQUAKES)
+
         rows = [record.data() for record in result]
 
     df = pd.DataFrame(rows)
-
-
 
     if df.empty:
         st.warning("No data returned from Neo4j.")
@@ -126,15 +176,14 @@ if st.button("Run analysis"):
         st.subheader("📋 Query Results")
         st.dataframe(df)
 
+        # ---------------------------
+        # PLOTTING
+        # ---------------------------
         if analysis == "Disasters before vs after hosting Olympics":
-            agg = (
-                df.groupby(["country", "olympic_year"])
-                .agg({
-                    "nb_disasters_before": "sum",
-                    "nb_disasters_after": "sum"
-                })
-                .reset_index()
-            )
+            agg = df.groupby(["country", "olympic_year"]).agg({
+                "nb_disasters_before": "sum",
+                "nb_disasters_after": "sum"
+            }).reset_index()
 
             fig = px.bar(
                 agg,
@@ -163,12 +212,33 @@ if st.button("Run analysis"):
                 y="avg_score",
                 hover_name="country",
                 title="Country Performance vs Number of Natural Disasters",
-                labels={
-                    "total_disasters": "Total Natural Disasters",
-                    "avg_score": "Average Olympic Score"
-                }
+                labels={"total_disasters": "Total Natural Disasters", "avg_score": "Average Olympic Score"}
             )
             st.plotly_chart(fig, use_container_width=True)
+
+        elif analysis == "Top most resilient countries to natural disasters":
+            fig = px.bar(
+                df,
+                x="country",
+                y="resilience",
+                color="resilience",
+                title="Top Most Resilient Countries to Natural Disasters",
+                labels={"resilience": "Average Score per Disaster"}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        elif analysis == "Performance before/after major earthquakes":
+            fig = px.scatter(
+                df,
+                x="avg_before",
+                y="avg_after",
+                hover_name="country",
+                color="disaster_subtype",
+                title="Average Country Performance Before vs After Major Earthquakes",
+                labels={"avg_before": "Average Score Before", "avg_after": "Average Score After"}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
 
 
 

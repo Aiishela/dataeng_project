@@ -218,13 +218,14 @@ def create_disaster_nodes():
                 d.subgroup = row.`Disaster Subgroup`,
                 d.type = row.`Disaster Type`,
                 d.subtype = row.`Disaster Subtype`,
-                d.magnitude = row.Magnitude,
+                d.magnitude = toFloat(row.Magnitude),
                 d.location = row.Location,
                 d.start_date = date(row.`Start Date`),
                 d.end_date = date(row.`End Date`)
 
             WITH d, row
-            MATCH (c:Country {name: row.Country})
+            MATCH (c:Country)
+            WHERE toLower(c.name) = toLower(row.Country) 
             MERGE (d)-[:AFFECTED]->(c)
             WITH d     
             MATCH (e:OlympicEdition)
