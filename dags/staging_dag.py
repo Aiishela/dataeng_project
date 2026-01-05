@@ -88,17 +88,7 @@ def _ensure_dirs():
     STAGING_DIR.mkdir(parents=True, exist_ok=True)
 # ---------------------- NEO4J ----------------------
 
-def run_query():
-    from neo4j import GraphDatabase
 
-    uri = "bolt://neo:7687"   # service name from docker-compose
-    driver = GraphDatabase.driver(uri)
-
-    with driver.session() as session:
-        session.run("""
-            MATCH (n)
-            RETURN count(n) AS nodes;
-        """)
 # ---------- TASKS: cleaning functions (imports inside to speed up DAG import) ----------
 def clean_games_task_fn(**context):
     import pandas as pd
@@ -236,7 +226,7 @@ def clean_cou_task_fn(**context):
     logging.info("Reading countries from %s", src)
     cou = pd.read_csv(src)
 
-    # Remove duplicated ROC row as you wanted
+    # Remove duplicated ROC row
     if {'noc', 'country'}.issubset(cou.columns):
         cou = cou[~((cou['noc'] == 'ROC') & (cou['country'] == 'ROC'))]
 
@@ -423,7 +413,7 @@ def clean_natural_disasters():
 # ---------------------- DAG ----------------------
 
 with DAG(
-    dag_id="atomic_cleaning_dag",
+    dag_id="staging_dag",
     default_args=DEFAULT_ARGS,
     start_date=datetime(2024, 1, 1),
     catchup=False,
@@ -464,14 +454,10 @@ with DAG(
         task_id="clean_natural_disasters",
         python_callable=clean_natural_disasters)
 
-    clean_medals = PythonOperator(
-        task_id="clean_medal_tally",
-        python_callable=clean_medal_tally,
-        execution_timeout=timedelta(minutes=5),
-    )
+  
 
     
-    clean_cou>> clean_disasters >> run_cypher_disaster >> create_staging
+    clean_cou>> clean_disasters  >> create_staging
 
     # All cleaning tasks can run in parallel after staging folder exists
     create_staging >> [clean_bio, clean_res,clean_games]

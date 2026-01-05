@@ -254,11 +254,11 @@ def create_disaster_nodes():
 # ---------------------- DAG ----------------------
 
 with DAG(
-    dag_id="test_dag",
+    dag_id="graph_creation_dag",
     default_args=DEFAULT_ARGS,
     start_date=datetime(2024, 1, 1),
     catchup=False,
-    tags=["test", "cypher"],
+    tags=["graph", "cypher"],
     schedule=None,  # run manually or trigger
 ) as dag:
 
