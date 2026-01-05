@@ -11,12 +11,27 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🏟️ Natural Disasters Before & After Hosting Olympics")
+st.title("Correlation between natural disasters and olympic games")
 
 st.markdown(
     """
-    This dashboard explores whether countries experience **more natural disasters**
-    in the **5 years before or after hosting the Olympic Games**.
+    <style>
+        .stApp {
+        background: #7d4796;
+        background-image: linear-gradient(to top, #6c4596, #563679, #41285d, #2d1b42, #1b0e29);
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown(
+    """
+    Have you ever wondered if the natural disasters happening in a country 
+    had an impact on the performance of said country during the Olympics?
+
+    It is a rethorical question of course.
+
+    You don't need to wait longer for the answers you so longed to have. 
+    We combined those two informations and made some queries!
     """
 )
 
@@ -25,61 +40,46 @@ st.markdown(
 # ---------------------------
 URI = "bolt://localhost:7687"
 USER = "neo4j"
-PASSWORD = "dataeng"  # ⬅️ change this
+PASSWORD = "dataeng"
 
 driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
 analysis = st.selectbox(
     "Choose an analysis",
     [
         "Disasters before vs after hosting Olympics",
-        "Medals won during natural disasters",
+        "Natural disasters happening while winning a medal",
         "Country performance vs total natural disasters",
-        "Top most resilient countries to natural disasters",
-        "Performance before/after major earthquakes"
+        "Performance before/after major earthquakes",
+        "Top most resilient countries to natural disasters"
     ]
 )
-QUERY_RESILIENT_COUNTRIES = """
-        MATCH (a:Athlete)-[:COMES_FROM]->(c:Country)
-        OPTIONAL MATCH (d:NaturalDisaster)-[:AFFECTED]->(c)
-        MATCH (a)-[:PARTICIPATED_IN]->(p)
-        WITH c, COUNT(d) AS total_disasters,
-        AVG(
-        CASE p.medal
-            WHEN 'Gold' THEN 3
-            WHEN 'Silver' THEN 2
-            WHEN 'Bronze' THEN 1
-            ELSE 0
-        END
-        ) AS avg_score
-        WHERE total_disasters > 0
-        RETURN c.name AS country,
-            total_disasters,
-            avg_score,
-            avg_score / total_disasters AS resilience
-        ORDER BY resilience DESC
-    """
 
+# ---------------------------
+# CYPHER QUERIES
+# ---------------------------
 QUERY_EVO_AFTER_EARTHQUAKES = """
-    MATCH (d:NaturalDisaster)-[:AFFECTED]->(c:Country)
-    WHERE d.magnitude >= 6
-    AND d.type = "Earthquake"
-    MATCH (a:Athlete)-[:PARTICIPATED_IN]->(p:Participation)-[:IN_EDITION]->(e)
-    MATCH (p)-[:REPRESENTED]->(c)
-    WITH c, d, e,
-        CASE p.medal
-        WHEN 'Gold' THEN 3
-        WHEN 'Silver' THEN 2
-        WHEN 'Bronze' THEN 1
-        ELSE 0
-        END AS score
-    WITH c, d,
-        AVG(CASE WHEN e.end_date < d.start_date THEN score END) AS avg_before,
-        AVG(CASE WHEN e.start_date > d.end_date THEN score END) AS avg_after
-    RETURN c.name AS country,
-        d.dis_no AS disaster_id,
-        d.subtype AS disaster_subtype,
-        avg_before,
-        avg_after
+MATCH (d:NaturalDisaster)-[:AFFECTED]->(c:Country)
+WHERE d.magnitude >= 6
+AND d.type = "Earthquake"
+MATCH (a:Athlete)-[:PARTICIPATED_IN]->(p:Participation)-[:IN_EDITION]->(e)
+MATCH (p)-[:REPRESENTED]->(c)
+WITH c, d, e,
+    CASE p.medal
+    WHEN 'Gold' THEN 3
+    WHEN 'Silver' THEN 2
+    WHEN 'Bronze' THEN 1
+    ELSE 0
+    END AS score
+WITH c, d,
+    AVG(CASE WHEN e.end_date < d.start_date THEN score END) AS avg_before,
+    AVG(CASE WHEN e.start_date > d.end_date THEN score END) AS avg_after
+RETURN c.name AS country,
+    d.subtype AS disaster_subtype,
+    d.start_date AS start_date,
+    d.location AS location,
+    d.magnitude AS magnitude,
+    avg_before,
+    avg_after
 """
 
 QUERY_COUNTRY_PERFORMANCE_VS_DISASTERS = """
@@ -103,31 +103,40 @@ RETURN c.name AS country,
 ORDER BY total_disasters DESC, avg_score DESC
 """
 
-# ---------------------------
-# CYPHER QUERY
-# ---------------------------
 QUERY_DISASTERS_BEFORE_AFTER = """
-MATCH (e:OlympicEdition)-[:HELD_IN]->(c:Country)
-MATCH (d:NaturalDisaster)-[:AFFECTED]->(c)
-WHERE e.start_date >= d.end_date
-AND d.start_date <= e.end_date + duration({years:5})
-RETURN c.name AS country,
-       e.start_date.year AS olympic_year,
-       d.type AS disaster_type,
-       COUNT(d) AS nb_disasters_before,
-       0 AS nb_disasters_after
+CALL {
+    // Disasters BEFORE the Olympics (within 5 years)
+    MATCH (e:OlympicEdition)-[:HELD_IN]->(c:Country)
+    MATCH (d:NaturalDisaster)-[:AFFECTED]->(c)
+    WHERE d.start_date >= e.start_date - duration({years:5})
+      AND d.start_date <  e.start_date
+    RETURN
+        e.start_date.year AS olympic_year,
+        c.name AS country,
+        COUNT(d) AS nb_before,
+        0 AS nb_after
 
-UNION
+    UNION ALL
 
-MATCH (e:OlympicEdition)-[:HELD_IN]->(c:Country)
-MATCH (nd:NaturalDisaster)-[:AFFECTED]->(c)
-WHERE nd.start_date >= e.end_date
-AND e.start_date <= nd.end_date + duration({years:5})
-RETURN c.name AS country,
-       e.start_date.year AS olympic_year,
-       nd.type AS disaster_type,
-       0 AS nb_disasters_before,
-       COUNT(nd) AS nb_disasters_after
+    // Disasters AFTER the Olympics (within 5 years)
+    MATCH (e:OlympicEdition)-[:HELD_IN]->(c:Country)
+    MATCH (d:NaturalDisaster)-[:AFFECTED]->(c)
+    WHERE d.start_date >  e.end_date
+      AND d.start_date <= e.end_date + duration({years:5})
+    RETURN
+        e.start_date.year AS olympic_year,
+        c.name AS country,
+        0 AS nb_before,
+        COUNT(d) AS nb_after
+}
+
+RETURN
+    olympic_year,
+    country,
+    SUM(nb_before) AS nb_disasters_before,
+    SUM(nb_after)  AS nb_disasters_after
+ORDER BY olympic_year DESC;
+
 """
 QUERY_MEDALS_DURING_DISASTERS = """
 MATCH (a:Athlete)-[:PARTICIPATED_IN]->(p:Participation)-[:IN_EDITION]->(e:OlympicEdition),
@@ -144,6 +153,28 @@ RETURN a.name AS athlete,
 ORDER BY nb_disasters DESC
 """
 
+QUERY_RESILIENT_COUNTRIES = """
+MATCH (c:Country)<-[:COMES_FROM]-(a:Athlete)-[:PARTICIPATED_IN]->(p)
+WITH c,
+     AVG(
+         CASE p.medal
+             WHEN 'Gold' THEN 3
+             WHEN 'Silver' THEN 2
+             WHEN 'Bronze' THEN 1
+             ELSE 0
+         END
+     ) AS avg_score
+
+OPTIONAL MATCH (d:NaturalDisaster)-[:AFFECTED]->(c)
+WITH c, avg_score, COUNT(DISTINCT d) AS total_disasters
+WHERE total_disasters > 0
+
+RETURN c.name AS country,
+       total_disasters,
+       avg_score,
+       avg_score / total_disasters AS resilience
+ORDER BY resilience DESC
+    """
 
 # ---------------------------
 # RUN QUERY BUTTON
@@ -153,57 +184,76 @@ if st.button("Run analysis"):
 
         if analysis == "Disasters before vs after hosting Olympics":
             result = session.run(QUERY_DISASTERS_BEFORE_AFTER)
+            query_explanation = """
+                This query counts the number of natural disasters that occured in the country that hosted the
+                olympics within a 5-year window (before and after) the games took place.
+            """
 
-        elif analysis == "Medals won during natural disasters":
+        elif analysis == "Natural disasters happening while winning a medal":
             result = session.run(QUERY_MEDALS_DURING_DISASTERS)
+            query_explanation = """
+                This query counts how many natural disasters affected the country of origin of medal-winning
+                athletes during the Olympic edition.
+            """
 
         elif analysis == "Country performance vs total natural disasters":
             result = session.run(QUERY_COUNTRY_PERFORMANCE_VS_DISASTERS)
-
-        elif analysis == "Top most resilient countries to natural disasters":
-            result = session.run(QUERY_RESILIENT_COUNTRIES)
+            query_explanation = """
+                This query computes, per country:
+            - an average medal score per participation (Gold = 3, Silver = 2, Bronze = 1, no medal = 0)
+            - the total number of natural disasters that affected that country
+            """
 
         elif analysis == "Performance before/after major earthquakes":
             result = session.run(QUERY_EVO_AFTER_EARTHQUAKES)
+            query_explanation = """
+                The query compares the average Olympic performance (Gold = 3, Silver = 2, Bronze = 1, no medal = 0) before and after major 
+                earthquakes (magnitude ≥ 6) for countries affected by those earthquakes.
+            """
+
+        elif analysis == "Top most resilient countries to natural disasters":
+            result = session.run(QUERY_RESILIENT_COUNTRIES)
+            query_explanation = """
+                This query ranks countries by a “resilience” metric defined as the average medal score divided
+                by the number of disasters affecting that country.
+            """
 
         rows = [record.data() for record in result]
 
+    st.markdown(query_explanation)
+    
     df = pd.DataFrame(rows)
 
     if df.empty:
         st.warning("No data returned from Neo4j.")
     else:
-        st.subheader("📋 Query Results")
-        st.dataframe(df)
+        st.subheader("Query Results")
 
         # ---------------------------
         # PLOTTING
         # ---------------------------
         if analysis == "Disasters before vs after hosting Olympics":
-            agg = df.groupby(["country", "olympic_year"]).agg({
-                "nb_disasters_before": "sum",
-                "nb_disasters_after": "sum"
-            }).reset_index()
+            agg = df.groupby("country", as_index=False)[
+                ["nb_disasters_before", "nb_disasters_after"]
+            ].sum()
 
             fig = px.bar(
                 agg,
                 x="country",
                 y=["nb_disasters_before", "nb_disasters_after"],
                 barmode="group",
-                title="Natural Disasters Before vs After Hosting Olympics"
+                title="Number of natural disasters before and after hosting the Olympics for each country across all editions"
             )
-            st.plotly_chart(fig, use_container_width=True)
 
-        elif analysis == "Medals won during natural disasters":
+        elif analysis == "Natural disasters happening while winning a medal":
             fig = px.bar(
                 df,
                 x="athlete",
                 y="nb_disasters",
                 color="medal",
-                title="Medals Won While Natural Disasters Were Occurring",
+                title="Natural disasters happening while winning a medal",
                 hover_data=["country", "edition_year"]
             )
-            st.plotly_chart(fig, use_container_width=True)
 
         elif analysis == "Country performance vs total natural disasters":
             fig = px.scatter(
@@ -214,18 +264,6 @@ if st.button("Run analysis"):
                 title="Country Performance vs Number of Natural Disasters",
                 labels={"total_disasters": "Total Natural Disasters", "avg_score": "Average Olympic Score"}
             )
-            st.plotly_chart(fig, use_container_width=True)
-
-        elif analysis == "Top most resilient countries to natural disasters":
-            fig = px.bar(
-                df,
-                x="country",
-                y="resilience",
-                color="resilience",
-                title="Top Most Resilient Countries to Natural Disasters",
-                labels={"resilience": "Average Score per Disaster"}
-            )
-            st.plotly_chart(fig, use_container_width=True)
 
         elif analysis == "Performance before/after major earthquakes":
             fig = px.scatter(
@@ -237,9 +275,21 @@ if st.button("Run analysis"):
                 title="Average Country Performance Before vs After Major Earthquakes",
                 labels={"avg_before": "Average Score Before", "avg_after": "Average Score After"}
             )
-            st.plotly_chart(fig, use_container_width=True)
 
+        elif analysis == "Top most resilient countries to natural disasters":
+            fig = px.bar(
+                df,
+                x="country",
+                y="resilience",
+                color="resilience",
+                title="Top Most Resilient Countries to Natural Disasters",
+                labels={"resilience": "Average Score per Disaster"}
+            )
 
-
+        # st.dataframe(
+        #     df.style.set_properties(**{"background-color": "white","color": "black"})
+        # )
+        st.dataframe(df)
+        st.plotly_chart(fig, use_container_width=True)
 
 driver.close()
