@@ -37,7 +37,7 @@ Questions formulated:
 
 - If a disaster is happening in a country, has this country won a medal during this time?
 
-
+- Is there any sort of correlation between a country’s overall average Olympic performance and its exposure to disasters?
 
 
 ## Pipeline
@@ -216,7 +216,19 @@ This highlights cases of **individual resilience**, where athletes achieved succ
 
 ---
 
+### 5. Is there any sort of correlation between a country’s overall average Olympic performance and its exposure to disasters?
 
+Here, we take a broader, aggregated view by comparing:
+- the average Olympic performance of a country across all participations,
+- with the total number of disasters that affected that country.
+
+This query does not assume causality but helps highlight:
+- whether disaster-prone countries tend to underperform, overperform, or show no clear pattern,
+- and which countries stand out as outliers.
+
+It provides a macro-level perspective that complements the more time-sensitive analyses.
+
+---
 
 
 
