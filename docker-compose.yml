@@ -372,15 +372,22 @@ services:
 
   neo:
     image: neo4j
-    user: "0:0"
     ports:
         - "${NEO_UI_PORT}:7474"
         - "${NEO_BOLT_PORT}:7687"
-    restart: always
+    restart: "no"
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH} # e.g. neo4j/test
+      - NEO4J_AUTH=none
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
+      - NEO4J_server_memory_heap_initial__size=512M
+      - NEO4J_server_memory_heap_max__size=512M
+      - NEO4J_server_memory_pagecache_size=512M
+      - NEO4J_dbms_memory_transaction_total_max=256M
+      
     volumes:
-      # - ./neo4j/data:/data
+      - neo4j_data:/data
       - ./data/staging:/var/lib/neo4j/import
     networks:
       - Practice
@@ -391,3 +398,4 @@ networks:
 
 volumes:
   postgres-db-volume:
+  neo4j_data:

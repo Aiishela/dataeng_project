@@ -1,0 +1,80 @@
+NotIn,InCou,SharedWords,SharedWordsStr
+Gambia,THE GAMBIA,{'gambia'},gambia
+Yemen Arab Republic,NORTH YEMEN,{'yemen'},yemen
+Yemen Arab Republic,SOUTH YEMEN,{'yemen'},yemen
+Yemen Arab Republic,YEMEN,{'yemen'},yemen
+Côte d’Ivoire,CÔTE D'IVOIRE,"{'côte', 'divoire'}","côte, divoire"
+Bolivia (Plurinational State of),BOLIVIA,{'bolivia'},bolivia
+China,"HONG KONG, CHINA",{'china'},china
+China,PEOPLE'S REPUBLIC OF CHINA,{'china'},china
+Iran (Islamic Republic of),ISLAMIC REPUBLIC OF IRAN,"{'islamic', 'iran'}","iran, islamic"
+Venezuela (Bolivarian Republic of),VENEZUELA,{'venezuela'},venezuela
+United Kingdom of Great Britain and Northern Ireland,GREAT BRITAIN,"{'britain', 'great'}","britain, great"
+United Kingdom of Great Britain and Northern Ireland,IRELAND,{'ireland'},ireland
+United Kingdom of Great Britain and Northern Ireland,KINGDOM OF SAUDI ARABIA,{'kingdom'},kingdom
+Taiwan (Province of China),"HONG KONG, CHINA",{'china'},china
+Taiwan (Province of China),PEOPLE'S REPUBLIC OF CHINA,{'china'},china
+"China, Hong Kong Special Administrative Region","HONG KONG, CHINA","{'kong', 'china', 'hong'}","china, hong, kong"
+"China, Hong Kong Special Administrative Region",PEOPLE'S REPUBLIC OF CHINA,{'china'},china
+Azores Islands,BRITISH VIRGIN ISLANDS,{'islands'},islands
+Azores Islands,CAYMAN ISLANDS,{'islands'},islands
+Azores Islands,COOK ISLANDS,{'islands'},islands
+Azores Islands,MARSHALL ISLANDS,{'islands'},islands
+Azores Islands,SOLOMON ISLANDS,{'islands'},islands
+Azores Islands,UNITED STATES VIRGIN ISLANDS,{'islands'},islands
+Micronesia (Federated States of),FEDERATED STATES OF MICRONESIA,"{'federated', 'micronesia'}","federated, micronesia"
+Germany Federal Republic,EAST GERMANY,{'germany'},germany
+Germany Federal Republic,GERMANY,{'germany'},germany
+Germany Federal Republic,WEST GERMANY,{'germany'},germany
+Bahamas,THE BAHAMAS,{'bahamas'},bahamas
+People's Democratic Republic of Yemen,DEMOCRATIC PEOPLE'S REPUBLIC OF KOREA,{'peoples'},peoples
+People's Democratic Republic of Yemen,LAO PEOPLE'S DEMOCRATIC REPUBLIC,{'peoples'},peoples
+People's Democratic Republic of Yemen,NORTH YEMEN,{'yemen'},yemen
+People's Democratic Republic of Yemen,PEOPLE'S REPUBLIC OF CHINA,{'peoples'},peoples
+People's Democratic Republic of Yemen,SOUTH YEMEN,{'yemen'},yemen
+People's Democratic Republic of Yemen,YEMEN,{'yemen'},yemen
+Turks and Caicos Islands,BRITISH VIRGIN ISLANDS,{'islands'},islands
+Turks and Caicos Islands,CAYMAN ISLANDS,{'islands'},islands
+Turks and Caicos Islands,COOK ISLANDS,{'islands'},islands
+Turks and Caicos Islands,MARSHALL ISLANDS,{'islands'},islands
+Turks and Caicos Islands,SOLOMON ISLANDS,{'islands'},islands
+Turks and Caicos Islands,UNITED STATES VIRGIN ISLANDS,{'islands'},islands
+Netherlands (Kingdom of the),KINGDOM OF SAUDI ARABIA,{'kingdom'},kingdom
+Netherlands (Kingdom of the),NETHERLANDS,{'netherlands'},netherlands
+Netherlands (Kingdom of the),NETHERLANDS ANTILLES,{'netherlands'},netherlands
+Saudi Arabia,KINGDOM OF SAUDI ARABIA,"{'arabia', 'saudi'}","arabia, saudi"
+Serbia Montenegro,MONTENEGRO,{'montenegro'},montenegro
+Serbia Montenegro,SERBIA,{'serbia'},serbia
+Serbia Montenegro,SERBIA AND MONTENEGRO,"{'montenegro', 'serbia'}","montenegro, serbia"
+Wallis and Futuna Islands,BRITISH VIRGIN ISLANDS,{'islands'},islands
+Wallis and Futuna Islands,CAYMAN ISLANDS,{'islands'},islands
+Wallis and Futuna Islands,COOK ISLANDS,{'islands'},islands
+Wallis and Futuna Islands,MARSHALL ISLANDS,{'islands'},islands
+Wallis and Futuna Islands,SOLOMON ISLANDS,{'islands'},islands
+Wallis and Futuna Islands,UNITED STATES VIRGIN ISLANDS,{'islands'},islands
+"China, Macao Special Administrative Region","HONG KONG, CHINA",{'china'},china
+"China, Macao Special Administrative Region",PEOPLE'S REPUBLIC OF CHINA,{'china'},china
+Canary Islands,BRITISH VIRGIN ISLANDS,{'islands'},islands
+Canary Islands,CAYMAN ISLANDS,{'islands'},islands
+Canary Islands,COOK ISLANDS,{'islands'},islands
+Canary Islands,MARSHALL ISLANDS,{'islands'},islands
+Canary Islands,SOLOMON ISLANDS,{'islands'},islands
+Canary Islands,UNITED STATES VIRGIN ISLANDS,{'islands'},islands
+New Caledonia,NEW ZEALAND,{'new'},new
+New Caledonia,PAPUA NEW GUINEA,{'new'},new
+State of Palestine,PALESTINE,{'palestine'},palestine
+Saint Helena,SAINT KITTS AND NEVIS,{'saint'},saint
+Saint Helena,SAINT LUCIA,{'saint'},saint
+Saint Helena,SAINT VINCENT AND THE GRENADINES,{'saint'},saint
+Northern Mariana Islands,BRITISH VIRGIN ISLANDS,{'islands'},islands
+Northern Mariana Islands,CAYMAN ISLANDS,{'islands'},islands
+Northern Mariana Islands,COOK ISLANDS,{'islands'},islands
+Northern Mariana Islands,MARSHALL ISLANDS,{'islands'},islands
+Northern Mariana Islands,SOLOMON ISLANDS,{'islands'},islands
+Northern Mariana Islands,UNITED STATES VIRGIN ISLANDS,{'islands'},islands
+Saint Barthélemy,SAINT KITTS AND NEVIS,{'saint'},saint
+Saint Barthélemy,SAINT LUCIA,{'saint'},saint
+Saint Barthélemy,SAINT VINCENT AND THE GRENADINES,{'saint'},saint
+Saint Martin (French Part),SAINT KITTS AND NEVIS,{'saint'},saint
+Saint Martin (French Part),SAINT LUCIA,{'saint'},saint
+Saint Martin (French Part),SAINT VINCENT AND THE GRENADINES,{'saint'},saint

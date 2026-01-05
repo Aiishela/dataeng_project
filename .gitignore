@@ -2,3 +2,9 @@
 /.kaggle/*
 /test/*.csv
 /data/*
+/.github/*
+/.venv/*
+/data_sources/*
+/neo4j/*
+/test/olympics-dashboard
+/test/.ipynb_checkpoints/
