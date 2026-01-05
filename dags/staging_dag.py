@@ -161,6 +161,8 @@ def clean_games_task_fn(**context):
 def clean_bio_task_fn(**context):
     import pandas as pd
     import unicodedata
+    import os
+    os.umask(0o022)
 
     src = LANDING_DIR / "Olympic_Athlete_Bio.csv"
     dst = STAGING_DIR / "Olympic_Athlete_Bio.csv"
@@ -190,6 +192,8 @@ def clean_bio_task_fn(**context):
 
 def clean_res_task_fn(**context):
     import pandas as pd
+    import os
+    os.umask(0o022)
 
     src = LANDING_DIR / "Olympic_Athlete_Event_Results.csv"
     dst = STAGING_DIR / "Olympic_Athlete_Event_Results.csv"
@@ -220,6 +224,8 @@ def clean_res_task_fn(**context):
 
 def clean_cou_task_fn(**context):
     import pandas as pd
+    import os
+    os.umask(0o022)
 
     src = LANDING_DIR / "Olympics_Country.csv"
     dst = STAGING_DIR / "Olympics_Country.csv"
@@ -253,6 +259,8 @@ def clean_cou_task_fn(**context):
 # --------------- NATURAL DISASTERS ------------------------
 def clean_natural_disasters():
     import pandas as pd
+    import os
+    os.umask(0o022)
 
     INPUT_FILE = Path(LANDING_DIR) / "natural_disasters_from_1900.xlsx"
 
@@ -453,12 +461,13 @@ with DAG(
     )
 
     clean_disasters = PythonOperator(
-        task_id="clean_natural_disasters", 
+        task_id="clean_natural_disasters",
         python_callable=clean_natural_disasters)
 
-    run_cypher_disaster = PythonOperator(
-        task_id="neo4j_query",
-        python_callable=run_query
+    clean_medals = PythonOperator(
+        task_id="clean_medal_tally",
+        python_callable=clean_medal_tally,
+        execution_timeout=timedelta(minutes=5),
     )
 
     
