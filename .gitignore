@@ -8,3 +8,5 @@
 /neo4j/*
 /test/olympics-dashboard
 /test/.ipynb_checkpoints/
+.DS_Store
+.env
