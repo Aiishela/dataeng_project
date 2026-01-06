@@ -204,22 +204,22 @@ To run the streamlit app, you need to install those libraries in an environment 
 This project is run using Docker.  
 The execution follows this pipeline: **Ingestion → Staging → Graph Creation → Analysis & Visualization**.
 
-1. Copy the env file from the project root and change it with your credentials : 
+1. Copy the env file from the project root : 
 ```bash
 cp .env.example .env
 ```
 
-2. Then build the Docker images
+1. Then build the Docker images
 ```bash
 docker compose build
 ```
 
-3. Run the docker compose
+1. Run the docker compose
 ```bash
 docker compose up -d
 ```
 
-4. Access Airflow from your browser
+1. Access Airflow from your browser
 
 ```
 http://localhost:8080
