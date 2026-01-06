@@ -209,17 +209,17 @@ The execution follows this pipeline: **Ingestion → Staging → Graph Creation 
 cp .env.example .env
 ```
 
-1. Then build the Docker images
+2. Then build the Docker images
 ```bash
 docker compose build
 ```
 
-1. Run the docker compose
+3. Run the docker compose
 ```bash
 docker compose up -d
 ```
 
-1. Access Airflow from your browser
+5. Access Airflow from your browser
 
 ```
 http://localhost:8080
