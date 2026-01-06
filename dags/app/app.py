@@ -15,16 +15,6 @@ st.title("Correlation between natural disasters and olympic games")
 
 st.markdown(
     """
-    <style>
-        .stApp {
-        background: #7d4796;
-        background-image: linear-gradient(to top, #6c4596, #563679, #41285d, #2d1b42, #1b0e29);
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-st.markdown(
-    """
     Have you ever wondered if the natural disasters happening in a country 
     had an impact on the performance of said country during the Olympics?
 
