@@ -219,7 +219,7 @@ docker compose build
 docker compose up -d
 ```
 
-5. Access Airflow from your browser
+4. Access Airflow from your browser
 
 ```
 http://localhost:8080
