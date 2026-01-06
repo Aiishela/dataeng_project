@@ -103,7 +103,8 @@ def clean_games_task():
     os.umask(0o022)
 
     src = LANDING_DIR / "Olympics_Games.csv"
-    dst = STAGING_DIR / "Olympics_Games.csv"
+    tmp_dst = STAGING_DIR / ".Olympics_Games.tmp.csv"
+    final_dst = STAGING_DIR / "Olympics_Games.csv"
 
     if not src.exists():
         raise FileNotFoundError(f"games source not found: {src}")
@@ -154,8 +155,9 @@ def clean_games_task():
     if existing_drop:
         games = games.drop(columns=existing_drop)
 
-    logging.info("Writing cleaned games to %s", dst)
-    games.to_csv(dst, index=False)
+    logging.info("Writing cleaned games to %s", tmp_dst)
+    games.to_csv(tmp_dst, index=False)
+    os.replace(tmp_dst, final_dst)
 
 def clean_bio_task():
     import pandas as pd
@@ -164,7 +166,8 @@ def clean_bio_task():
     os.umask(0o022)
 
     src = LANDING_DIR / "Olympic_Athlete_Bio.csv"
-    dst = STAGING_DIR / "Olympic_Athlete_Bio.csv"
+    tmp_dst = STAGING_DIR / ".Olympic_Athlete_Bio.tmp.csv"
+    final_dst = STAGING_DIR / "Olympic_Athlete_Bio.csv"
 
     if not src.exists():
         raise FileNotFoundError(f"bio source not found: {src}")
@@ -185,8 +188,9 @@ def clean_bio_task():
         bio = bio.drop(columns=existing_drop)
     bio['country_noc'] = bio['country_noc'].replace(CANONICAL_NOC_MAP_COU)
 
-    logging.info("Writing cleaned bio to %s", dst)
-    bio.to_csv(dst, index=False)
+    logging.info("Writing cleaned bio to %s", tmp_dst)
+    bio.to_csv(tmp_dst, index=False)
+    os.replace(tmp_dst, final_dst)
 
 def clean_res_task():
     import pandas as pd
@@ -194,7 +198,8 @@ def clean_res_task():
     os.umask(0o022)
 
     src = LANDING_DIR / "Olympic_Athlete_Event_Results.csv"
-    dst = STAGING_DIR / "Olympic_Athlete_Event_Results.csv"
+    tmp_dst = STAGING_DIR / ".Olympic_Athlete_Event_Results.tmp.csv"
+    final_dst = STAGING_DIR / "Olympic_Athlete_Event_Results.csv"
 
     if not src.exists():
         raise FileNotFoundError(f"results source not found: {src}")
@@ -216,8 +221,10 @@ def clean_res_task():
 
     res['country_noc'] = res['country_noc'].replace(CANONICAL_NOC_MAP_COU)
     res = res.drop_duplicates()
-    logging.info("Writing cleaned results to %s", dst)
-    res.to_csv(dst, index=False)
+    logging.info("Writing cleaned results to %s", tmp_dst)
+    res.to_csv(tmp_dst, index=False)
+    os.replace(tmp_dst, final_dst)
+    
 
 def clean_cou_task():
     import pandas as pd
@@ -225,7 +232,8 @@ def clean_cou_task():
     os.umask(0o022)
 
     src = LANDING_DIR / "Olympics_Country.csv"
-    dst = STAGING_DIR / "Olympics_Country.csv"
+    final_dst = STAGING_DIR / "Olympics_Country.csv"
+    tmp_dst = STAGING_DIR / ".Olympics_Country.tmp.csv"
 
     if not src.exists():
         raise FileNotFoundError(f"country source not found: {src}")
@@ -250,8 +258,10 @@ def clean_cou_task():
     cou['noc'] = cou['noc'].replace(CANONICAL_NOC_MAP_COU)
     cou['country'] = cou['country'].replace(CANONICAL_COUNTRY_MAP_COU)
     cou=cou.drop_duplicates()
-    logging.info("Writing cleaned countries to %s", dst)
-    cou.to_csv(dst, index=False)
+    logging.info("Writing cleaned countries to %s", final_dst)
+    cou.to_csv(tmp_dst, index=False)
+    os.replace(tmp_dst, final_dst)
+    
 
 # --------------- CLEANING OF NATURAL DISASTERS DATASET------------------------
 
@@ -412,6 +422,7 @@ with DAG(
     catchup=False,
     tags=["cleaning", "atomic"],
     schedule=None,  
+    max_active_runs=1,
 ) as dag:
 
     create_staging = PythonOperator(
