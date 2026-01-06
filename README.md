@@ -257,13 +257,35 @@ A local URL will be displayed in the terminal or opened automatically in your br
 
 ## Trouble Shooting
 
-We are aware that there is a problem with Macs while running the third dag. It is a memory issue. We couldn't find how to fix it. 
+We are aware that there is a problem with Macs while running the third dag.It is a **memory issue**.
 Everything runs well on Windows.
 
-To make it function on macs, you can follow the steps below :
+Here are two solutions we recommend following:
+
+### Increase Docker Memory Allocation
+
+In **Docker Desktop → Settings → Resources**:
+
+- Allocate **at least 8 GB of memory**  
+  (6 GB was not sufficient in our case)
+- Ensure **Swap memory is enabled** and allocate 4GB
+
+To maximize available resources:
+
+- Restart your computer
+- Close **all non-essential applications**
+- Run only the applications required for this project (Docker + browser)
+
+---
+
+### Alternative Recovery Procedure (If the Issue Persists)
+
+If the problem persists even after having done that then try following the steps below:
 - run ```docker compose up```
 - run the first two dags in Airflow (01 and 02)
 - run ```docker compose down``` and ```docker compose up```
 - run only the third dag
 
 It should work, you can then run from the 6th step above.
+
+
