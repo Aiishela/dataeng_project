@@ -19,6 +19,7 @@ by BARATOVA Malika, DAI Qinshu, NOUR ELLIL Hafsa
   - [5. Is there any sort of correlation between a country’s overall average Olympic performance and its exposure to disasters?](#5-is-there-any-sort-of-correlation-between-a-countrys-overall-average-olympic-performance-and-its-exposure-to-disasters)
 - [Requirements](#requirements)
 - [Run the Project](#run-the-project)
+- [Trouble Shooting](#trouble-shooting)
 
 ## Abstract
 This project implements a comprehensive 3 pipeline ETL to analyze the correlation between natural disasters and Olympic Games throughout history.
@@ -253,3 +254,16 @@ A local URL will be displayed in the terminal or opened automatically in your br
 7. Run the queries by using the streamlit interface
 
 ![The streamlit app](images/streamlit_app.png)
+
+## Trouble Shooting
+
+We are aware that there is a problem with Macs while running the third dag. It is a memory issue. We couldn't find how to fix it. 
+Everything runs well on Windows.
+
+To make it function on macs, you can follow the steps below :
+- run ```docker compose up```
+- run the first two dags in Airflow (01 and 02)
+- run ```docker compose down``` and ```docker compose up```
+- run only the third dag
+
+It should work, you can then run from the 6th step above.
